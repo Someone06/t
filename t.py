@@ -2,10 +2,6 @@
 
 """t is for people that want do things, not organize their tasks."""
 
-from __future__ import (
-    with_statement,
-)
-
 import hashlib
 import re
 import sys
