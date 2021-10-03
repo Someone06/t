@@ -6,6 +6,14 @@ name = "pypi"
 [packages]
 
 [dev-packages]
+black = "*"
+isort = "*"
+flake8 = "*"
+mypy = "*"
+pre-commit = "*"
 
 [requires]
 python_version = "3.9"
+
+[pipenv]
+allow_prereleases = true
