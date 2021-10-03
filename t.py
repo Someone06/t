@@ -17,6 +17,9 @@ from optparse import (
     OptionGroup,
     OptionParser,
 )
+from typing import (
+    Optional,
+)
 
 
 class InvalidTaskfile(Exception):
@@ -28,20 +31,20 @@ class InvalidTaskfile(Exception):
 class AmbiguousPrefix(Exception):
     """Raised when trying to use a prefix that could identify multiple tasks."""
 
-    def __init__(self, prefix):
-        super(AmbiguousPrefix, self).__init__()
+    def __init__(self, prefix: str) -> None:
+        super().__init__()
         self.prefix = prefix
 
 
 class UnknownPrefix(Exception):
     """Raised when trying to use a prefix that does not match any tasks."""
 
-    def __init__(self, prefix):
-        super(UnknownPrefix, self).__init__()
+    def __init__(self, prefix: str) -> None:
+        super().__init__()
         self.prefix = prefix
 
 
-def _hash(text):
+def _hash(text: str) -> str:
     """Return a hash of the given text for use as an id.
 
     Currently SHA1 hashing is used.  It should be plenty for our purposes.
@@ -50,7 +53,7 @@ def _hash(text):
     return hashlib.sha1(text.encode("utf-8")).hexdigest()
 
 
-def _task_from_taskline(taskline):
+def _task_from_taskline(taskline: str) -> Optional[dict[str, str]]:
     """Parse a taskline (from a task file) and return a task.
 
     A taskline should be in the format:
@@ -81,7 +84,7 @@ def _task_from_taskline(taskline):
     return task
 
 
-def _tasklines_from_tasks(tasks):
+def _tasklines_from_tasks(tasks: list[dict[str, str]]) -> list[str]:
     """Parse a list of tasks into tasklines suitable for writing."""
 
     tasklines = []
@@ -94,7 +97,7 @@ def _tasklines_from_tasks(tasks):
     return tasklines
 
 
-def _prefixes(ids):
+def _prefixes(ids: dict[str, str]) -> dict[str, str]:
     """Return a mapping of ids to prefixes in O(n) time.
 
     Each prefix will be the shortest possible substring of the ID that
@@ -103,7 +106,7 @@ def _prefixes(ids):
     If an ID of one task is entirely a substring of another task's ID, the
     entire ID will be the prefix.
     """
-    ps = {}
+    ps: dict[str, str] = {}
     for id in ids:
         id_len = len(id)
         for i in range(1, id_len + 1):
@@ -133,7 +136,7 @@ def _prefixes(ids):
     return ps
 
 
-class TaskDict(object):
+class TaskDict:
     """A set of tasks, both finished and unfinished, for a given list.
 
     The list's files are read from disk when the TaskDict is initialized. They
@@ -141,10 +144,10 @@ class TaskDict(object):
 
     """
 
-    def __init__(self, taskdir=".", name="tasks"):
+    def __init__(self, taskdir: str = ".", name: str = "tasks") -> None:
         """Initialize by reading the task files, if they exist."""
-        self.tasks = {}
-        self.done = {}
+        self.tasks: dict[str, dict[str, str]] = {}
+        self.done: dict[str, dict[str, str]] = {}
         self.name = name
         self.taskdir = taskdir
         filemap = (("tasks", self.name), ("done", ".%s.done" % self.name))
@@ -160,7 +163,7 @@ class TaskDict(object):
                         if task is not None:
                             getattr(self, kind)[task["id"]] = task
 
-    def __getitem__(self, prefix):
+    def __getitem__(self, prefix: str) -> dict[str, str]:
         """Return the unfinished task with the given prefix.
 
         If more than one task matches the prefix an AmbiguousPrefix exception
@@ -181,12 +184,12 @@ class TaskDict(object):
             else:
                 raise AmbiguousPrefix(prefix)
 
-    def add_task(self, text):
+    def add_task(self, text: str) -> None:
         """Add a new, unfinished task with the given summary text."""
         task_id = _hash(text)
         self.tasks[task_id] = {"id": task_id, "text": text}
 
-    def edit_task(self, prefix, text):
+    def edit_task(self, prefix: str, text: str) -> None:
         """Edit the task with the given prefix.
 
         If more than one task matches the prefix an AmbiguousPrefix exception
@@ -203,7 +206,7 @@ class TaskDict(object):
 
         task["text"] = text
 
-    def finish_task(self, prefix):
+    def finish_task(self, prefix: str) -> None:
         """Mark the task with the given prefix as finished.
 
         If more than one task matches the prefix an AmbiguousPrefix exception
@@ -214,7 +217,7 @@ class TaskDict(object):
         task = self.tasks.pop(self[prefix]["id"])
         self.done[task["id"]] = task
 
-    def remove_task(self, prefix):
+    def remove_task(self, prefix: str) -> None:
         """Remove the task from tasks list.
 
         If more than one task matches the prefix an AmbiguousPrefix exception
@@ -224,7 +227,13 @@ class TaskDict(object):
         """
         self.tasks.pop(self[prefix]["id"])
 
-    def print_list(self, kind="tasks", verbose=False, quiet=False, grep=""):
+    def print_list(
+        self,
+        kind: str = "tasks",
+        verbose: bool = False,
+        quiet: bool = False,
+        grep: str = "",
+    ) -> None:
         """Print out a nicely formatted list of unfinished tasks."""
         tasks = dict(getattr(self, kind).items())
         label = "prefix" if not verbose else "id"
@@ -239,7 +248,7 @@ class TaskDict(object):
                 p = "%s - " % task[label].ljust(plen) if not quiet else ""
                 print(p + task["text"])
 
-    def write(self, delete_if_empty=False):
+    def write(self, delete_if_empty: bool = False) -> None:
         """Flush the finished and unfinished tasks to the files on disk."""
         filemap = (("tasks", self.name), ("done", ".%s.done" % self.name))
         for kind, filename in filemap:
@@ -255,7 +264,7 @@ class TaskDict(object):
                 os.remove(path)
 
 
-def _build_parser():
+def _build_parser() -> OptionParser:
     """Return a parser for the command-line interface."""
     usage = "Usage: %prog [-t DIR] [-l LIST] [options] [TEXT]"
     parser = OptionParser(usage=usage)
@@ -345,7 +354,7 @@ def _build_parser():
     return parser
 
 
-def _main():
+def _main() -> None:
     """Run the command-line interface."""
     (options, args) = _build_parser().parse_args()
 
