@@ -47,7 +47,7 @@ def _hash(text):
     Currently SHA1 hashing is used.  It should be plenty for our purposes.
 
     """
-    return hashlib.sha1(text).hexdigest()
+    return hashlib.sha1(text.encode("utf-8")).hexdigest()
 
 
 def _task_from_taskline(taskline):
@@ -153,7 +153,7 @@ class TaskDict(object):
             if os.path.isdir(path):
                 raise InvalidTaskfile
             if os.path.exists(path):
-                with open(path, "r") as tfile:
+                with open(path, "r", encoding="utf-8") as tfile:
                     tls = [tl.strip() for tl in tfile if tl]
                     tasks = map(_task_from_taskline, tls)
                     for task in tasks:
@@ -248,7 +248,7 @@ class TaskDict(object):
                 raise InvalidTaskfile
             tasks = sorted(getattr(self, kind).values(), key=itemgetter("id"))
             if tasks or not delete_if_empty:
-                with open(path, "w") as tfile:
+                with open(path, "w", encoding="utf-8") as tfile:
                     for taskline in _tasklines_from_tasks(tasks):
                         tfile.write(taskline)
             elif not tasks and os.path.isfile(path):
