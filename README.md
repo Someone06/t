@@ -4,6 +4,8 @@ t
 `t` is a command-line todo list manager for people that want to *finish* tasks,
 not organize them.
 
+This is a fork of <https://github.com/Jonhoo/t> which I maintain for personal
+use only.
 
 Why t?
 ------
