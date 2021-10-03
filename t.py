@@ -7,7 +7,6 @@ from __future__ import (
 )
 
 import hashlib
-import os
 import re
 import sys
 from operator import (
@@ -16,6 +15,9 @@ from operator import (
 from optparse import (
     OptionGroup,
     OptionParser,
+)
+from pathlib import (
+    Path,
 )
 from typing import (
     Optional,
@@ -144,7 +146,7 @@ class TaskDict:
 
     """
 
-    def __init__(self, taskdir: str = ".", name: str = "tasks") -> None:
+    def __init__(self, taskdir: Path = Path.cwd(), name: str = "tasks") -> None:
         """Initialize by reading the task files, if they exist."""
         self.tasks: dict[str, dict[str, str]] = {}
         self.done: dict[str, dict[str, str]] = {}
@@ -152,10 +154,10 @@ class TaskDict:
         self.taskdir = taskdir
         filemap = (("tasks", self.name), ("done", ".%s.done" % self.name))
         for kind, filename in filemap:
-            path = os.path.join(os.path.expanduser(self.taskdir), filename)
-            if os.path.isdir(path):
+            path = self.taskdir.expanduser() / filename
+            if path.is_dir():
                 raise InvalidTaskfile
-            if os.path.exists(path):
+            if path.exists():
                 with open(path, "r", encoding="utf-8") as tfile:
                     tls = [tl.strip() for tl in tfile if tl]
                     tasks = map(_task_from_taskline, tls)
@@ -252,16 +254,16 @@ class TaskDict:
         """Flush the finished and unfinished tasks to the files on disk."""
         filemap = (("tasks", self.name), ("done", ".%s.done" % self.name))
         for kind, filename in filemap:
-            path = os.path.join(os.path.expanduser(self.taskdir), filename)
-            if os.path.isdir(path):
+            path = self.taskdir.expanduser() / filename
+            if path.is_dir():
                 raise InvalidTaskfile
             tasks = sorted(getattr(self, kind).values(), key=itemgetter("id"))
             if tasks or not delete_if_empty:
                 with open(path, "w", encoding="utf-8") as tfile:
                     for taskline in _tasklines_from_tasks(tasks):
                         tfile.write(taskline)
-            elif not tasks and os.path.isfile(path):
-                os.remove(path)
+            elif not tasks and path.is_file():
+                path.unlink()
 
 
 def _build_parser() -> OptionParser:
@@ -358,7 +360,7 @@ def _main() -> None:
     """Run the command-line interface."""
     (options, args) = _build_parser().parse_args()
 
-    td = TaskDict(taskdir=options.taskdir, name=options.name)
+    td = TaskDict(taskdir=Path(options.taskdir), name=options.name)
     text = " ".join(args).strip()
 
     try:
