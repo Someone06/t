@@ -1,12 +1,22 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3.9
 
 """t is for people that want do things, not organize their tasks."""
 
-from __future__ import with_statement
+from __future__ import (
+    with_statement,
+)
 
-import os, re, sys, hashlib
-from operator import itemgetter
-from optparse import OptionParser, OptionGroup
+import hashlib
+import os
+import re
+import sys
+from operator import (
+    itemgetter,
+)
+from optparse import (
+    OptionGroup,
+    OptionParser,
+)
 
 
 class InvalidTaskfile(Exception):
