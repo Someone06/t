@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.9
+#!/usr/bin/env python3.10
 
 """t is for people that want do things, not organize their tasks."""
 
